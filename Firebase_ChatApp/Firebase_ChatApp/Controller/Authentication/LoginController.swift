@@ -9,9 +9,15 @@
 import UIKit
 import SnapKit
 
+protocol AuthenticationControllerProtocol {
+  func checkFormStatus()
+}
+
 class LoginController: UIViewController {
   
   // Mark: - Properties
+  
+  private var viewModel = LoginViewModel()
   
   private let iconImage: UIImageView = {
     let imageView = UIImageView()
@@ -45,6 +51,8 @@ class LoginController: UIViewController {
     button.backgroundColor = #colorLiteral(red: 0.9098039269, green: 0.4784313738, blue: 0.6431372762, alpha: 1)
     button.setTitleColor(.white, for: .normal)
     button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    button.isEnabled = false
+    button.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
     
     return button
   }()
@@ -109,20 +117,44 @@ class LoginController: UIViewController {
       $0.bottom.equalTo(guide.snp.bottom).offset(16)
       $0.centerX.equalToSuperview()
     }
-  }
-  
-  func configureGradientLayer() {
-    let gradient = CAGradientLayer()
-    gradient.colors = [UIColor.systemPurple.cgColor, UIColor.systemPink.cgColor]
-    gradient.locations = [0, 1]
-    view.layer.addSublayer(gradient)
-    gradient.frame = view.frame
+    
+    emailTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
+    passwordTextField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
   }
   
   // Mark: - Selectors
+  @objc func handleLogin() {
+    print("DEBUG: Handle login here..")
+  }
+  
   @objc func handleShowSignUp(_ sender: UIButton) {
     let controller = RegistrationController()
     navigationController?.pushViewController(controller, animated: true)
   }
+  
+  @objc func textDidChange(_ sender: UITextField) {
+    print("DEBUG: \(sender)")
+    if (sender == emailTextField) {
+      viewModel.email = sender.text
+    } else {
+      viewModel.password = sender.text
+    }
+    
+    checkFormStatus()
+  }
 
+}
+
+// MARK: - <#controller#>
+
+extension LoginController: AuthenticationControllerProtocol {
+  func checkFormStatus() {
+    if viewModel.formIsValid {
+      loginButton.isEnabled = true
+      loginButton.backgroundColor = #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1)
+    } else {
+      loginButton.isEnabled = false
+      loginButton.backgroundColor = #colorLiteral(red: 0.9098039269, green: 0.4784313738, blue: 0.6431372762, alpha: 1)
+    }
+  }
 }
