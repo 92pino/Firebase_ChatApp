@@ -17,6 +17,19 @@ class ConversationsController: UIViewController {
   // Mark: - Properties
   private let tableView = UITableView()
   
+  private let newMessageButton: UIButton = {
+    let button = UIButton(type: .system)
+    button.setImage(UIImage(systemName: "plus"), for: .normal)
+    button.backgroundColor = .systemPurple
+    button.tintColor = .white
+    button.imageView?.snp.makeConstraints({
+      $0.width.height.equalTo(24)
+    })
+    button.addTarget(self, action: #selector(showNewMessageController), for: .touchUpInside)
+    
+    return button
+  }()
+  
   // Mark: - Lifecycle
   
   override func viewDidLoad() {
@@ -45,6 +58,16 @@ class ConversationsController: UIViewController {
     
     let image = UIImage(systemName: "person.circle.fill")
     navigationItem.leftBarButtonItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(showProfile))
+    
+    let guide = view.safeAreaLayoutGuide
+    
+    view.addSubview(newMessageButton)
+    newMessageButton.snp.makeConstraints {
+      $0.bottom.equalTo(guide.snp.bottom).offset(-16)
+      $0.right.equalTo(view.snp.right).offset(-24)
+      $0.width.height.equalTo(56)
+    }
+    newMessageButton.layer.cornerRadius = 56 / 2
   }
   
   func configureTableView() {
@@ -96,6 +119,12 @@ class ConversationsController: UIViewController {
   }
   
   // Mark: - Selectors
+  @objc func showNewMessageController(_ sender: UIButton) {
+    let controller = NewMessageController()
+    let nav = UINavigationController(rootViewController: controller)
+    present(nav, animated: true, completion: nil)
+  }
+  
   @objc func showProfile(_ sender: UIBarButtonItem) {
     logout()
   }

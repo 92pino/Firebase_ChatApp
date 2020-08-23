@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import Firebase
+import JGProgressHUD
 
 protocol AuthenticationControllerProtocol {
   func checkFormStatus()
@@ -128,12 +129,19 @@ class LoginController: UIViewController {
     guard let email = emailTextField.text else { return }
     guard let password = passwordTextField.text else { return }
     
+    // progressbar
+    showLoader(true, withText: "Logging in")
+    
     AuthService.shared.logUserIn(withEmail: email, password: password) { (result, error) in
       if let error = error {
         print("DEBUG: Failed to login with error \(error.localizedDescription)")
+        // 에러 났을 경우 progressbar stop
+        self.showLoader(false)
         return
       }
       
+      // 성공 했을 경우 progressbar stop
+      self.showLoader(false)
       self.dismiss(animated: true, completion: nil)
     }
   }
