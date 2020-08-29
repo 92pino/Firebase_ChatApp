@@ -53,7 +53,7 @@ class ConversationsController: UIViewController {
   func configureUI() {
     view.backgroundColor = .white
     
-    configureNavigationBar()
+    configureNavigationBar(withTitle: "Messages", prefersLargeTitles: true)
     configureTableView()
     
     let image = UIImage(systemName: "person.circle.fill")
@@ -82,24 +82,6 @@ class ConversationsController: UIViewController {
     tableView.frame = view.frame
   }
   
-  func configureNavigationBar() {
-    let appearance = UINavigationBarAppearance()
-    appearance.configureWithOpaqueBackground()
-    appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-    appearance.backgroundColor = .systemPurple
-    
-    navigationController?.navigationBar.standardAppearance = appearance
-    navigationController?.navigationBar.compactAppearance = appearance
-    navigationController?.navigationBar.scrollEdgeAppearance = appearance
-    
-    navigationController?.navigationBar.prefersLargeTitles = true
-    navigationItem.title = "Messages"
-    navigationController?.navigationBar.tintColor = .white
-    navigationController?.navigationBar.isTranslucent = true
-    
-    navigationController?.navigationBar.overrideUserInterfaceStyle = .dark
-  }
-  
   // MARK: - API
   func authenticateUser() {
     if Auth.auth().currentUser?.uid == nil {
@@ -121,6 +103,7 @@ class ConversationsController: UIViewController {
   // Mark: - Selectors
   @objc func showNewMessageController(_ sender: UIButton) {
     let controller = NewMessageController()
+    controller.delegate = self
     let nav = UINavigationController(rootViewController: controller)
     present(nav, animated: true, completion: nil)
   }
@@ -148,5 +131,14 @@ extension ConversationsController: UITableViewDataSource {
 extension ConversationsController: UITableViewDelegate {
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     print(indexPath.row)
+  }
+}
+
+extension ConversationsController: NewMessageControllerDelegate {
+  func controller(_ controller: NewMessageController, wantsToStartChatWith user: User) {
+    //NewMessageController에서 Protocol을 넘겨서 NewMessageController은 dismiss시키고 ConversationsController에서 chatController을 띄워준다.
+    controller.dismiss(animated: true, completion: nil)
+    let chat = ChatController(user: user)
+    navigationController?.pushViewController(chat, animated: true)
   }
 }
