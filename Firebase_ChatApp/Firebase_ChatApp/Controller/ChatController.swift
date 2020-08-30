@@ -16,9 +16,12 @@ class ChatController: UICollectionViewController {
   // Mark: - Properties
   
   private let user: User
+  private var messages = [Message]()
+  var fromCurrentUser = false
   
   private lazy var customInputView: CustomInputAccessoryView = {
     let iv = CustomInputAccessoryView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 50))
+    iv.delegate = self
     
     return iv
   }()
@@ -39,7 +42,7 @@ class ChatController: UICollectionViewController {
     
     configureUI()
     
-    print("DEBUG: User in chat controller is \(user.username)")
+    fetchMessages()
   }
   
   override var inputAccessoryView: UIView? {
@@ -48,6 +51,15 @@ class ChatController: UICollectionViewController {
   
   override var canBecomeFirstResponder: Bool {
     return true
+  }
+  
+  // MARK: - API
+  
+  func fetchMessages() {
+    Service.fetchMessages(forUser: user) { messages in
+      self.messages = messages
+      self.collectionView.reloadData()
+    }
   }
   
   // MARK: - Helpers
@@ -65,11 +77,13 @@ class ChatController: UICollectionViewController {
 
 extension ChatController {
   override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return 5
+    return messages.count
   }
   
   override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! MessageCell
+    cell.message = messages[indexPath.row]
+    cell.message?.user = user
     
     return cell
   }
@@ -82,5 +96,18 @@ extension ChatController: UICollectionViewDelegateFlowLayout {
   
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return CGSize(width: view.frame.width, height: 50)
+  }
+}
+
+extension ChatController: CustomInputAccessoryViewDelegate {
+  func inputView(_ inputView: CustomInputAccessoryView, wantsToSend message: String) {    
+    Service.uploadMessage(message, to: user) { error in
+      if let error = error {
+        print("DEBUG :", error.localizedDescription)
+        return
+      }
+      
+      inputView.clearMessageText()
+    }
   }
 }
