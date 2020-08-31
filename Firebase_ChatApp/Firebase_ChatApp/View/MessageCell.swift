@@ -66,6 +66,7 @@ class MessageCell: UICollectionViewCell {
     bubbleContainer.layer.cornerRadius = 12
     bubbleContainer.snp.makeConstraints {
       $0.top.equalTo(self.snp.top)
+      $0.bottom.equalTo(self.snp.bottom)
       $0.width.lessThanOrEqualTo(250)
     }
     

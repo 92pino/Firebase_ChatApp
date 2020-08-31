@@ -12,7 +12,7 @@ struct Service {
   
   static func fetchUsers(completion: @escaping([User]) -> ()) {
     var users = [User]()
-    Firestore.firestore().collection("users").getDocuments { (snapshot, error) in
+    COLLECTION_USER.getDocuments { (snapshot, error) in
       snapshot?.documents.forEach({ document in
         
         let dictionary = document.data()
@@ -21,6 +21,34 @@ struct Service {
         users.append(user)
         completion(users)
         
+      })
+    }
+  }
+  
+  static func fetchUser(withUid uid: String, completion: @escaping(User) -> ()) {
+    COLLECTION_USER.document(uid).getDocument { (snapshot, error) in
+      guard let dictionary = snapshot?.data() else { return }
+      let user = User(dictionary: dictionary)
+      completion(user)
+    }
+  }
+  
+  static func fetchConversations(completion: @escaping([Conversation]) -> ()) {
+    var conversations = [Conversation]()
+    guard let uid = Auth.auth().currentUser?.uid else { return }
+    
+    let query =  COLLECTION_MESSAGE.document(uid).collection("recent-messages").order(by: "timestamp")
+    
+    query.addSnapshotListener { (snapshot, error) in
+      snapshot?.documentChanges.forEach({ (change) in
+        let dictionary = change.document.data()
+        let message = Message(dictionary: dictionary)
+        
+        self.fetchUser(withUid: message.toId) { (user) in
+          let conversation = Conversation(user: user, message: message)
+          conversations.append(conversation)
+          completion(conversations)
+        }
       })
     }
   }
@@ -49,6 +77,10 @@ struct Service {
     
     COLLECTION_MESSAGE.document(currentUid).collection(user.uid).addDocument(data: data) { _ in
       COLLECTION_MESSAGE.document(user.uid).collection(currentUid).addDocument(data: data, completion: completion)
+      
+      COLLECTION_MESSAGE.document(currentUid).collection("recent-messages").document(user.uid).setData(data)
+      
+      COLLECTION_MESSAGE.document(user.uid).collection("recent-messages").document(currentUid).setData(data)
     }
   }
   

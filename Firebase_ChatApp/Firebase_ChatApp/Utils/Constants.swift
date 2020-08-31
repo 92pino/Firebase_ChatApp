@@ -9,3 +9,4 @@
 import Firebase
 
 let COLLECTION_MESSAGE = Firestore.firestore().collection("messages")
+let COLLECTION_USER = Firestore.firestore().collection("users")
